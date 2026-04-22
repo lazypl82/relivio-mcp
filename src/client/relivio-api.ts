@@ -1,4 +1,4 @@
-import type { SummaryResponse } from "../types.js";
+import type { RecentDeploymentsResponse, SummaryResponse } from "../types.js";
 
 export class RelivioApiHttpError extends Error {
   constructor(
@@ -72,6 +72,40 @@ export class RelivioApiClient {
     const parsed = parseSummaryResponse(responseText);
     return parsed;
   }
+
+  async listRecentDeployments(limit = 10): Promise<RecentDeploymentsResponse> {
+    const url = new URL(`${this.apiUrl}/api/v1/deployments/recent`);
+    url.searchParams.set("limit", String(limit));
+
+    let response: Response;
+    try {
+      response = await this.fetchImpl(url, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "X-API-Key": this.apiKey,
+        },
+        signal: AbortSignal.timeout(this.timeoutMs),
+      });
+    } catch (error) {
+      throw new RelivioApiHttpError(
+        error instanceof Error ? error.message : "Relivio request failed.",
+        503,
+        "",
+      );
+    }
+
+    const responseText = await response.text();
+    if (!response.ok) {
+      throw new RelivioApiHttpError(
+        `Relivio API request failed with status ${response.status}.`,
+        response.status,
+        responseText,
+      );
+    }
+
+    return parseRecentDeploymentsResponse(responseText);
+  }
 }
 
 function parseSummaryResponse(raw: string): SummaryResponse {
@@ -106,6 +140,37 @@ function parseSummaryResponse(raw: string): SummaryResponse {
     affected_apis: asStringArray(record.affected_apis),
     top_signals: asStringArray(record.top_signals),
     created_at: createdAt,
+  };
+}
+
+function parseRecentDeploymentsResponse(raw: string): RecentDeploymentsResponse {
+  let payload: unknown;
+  try {
+    payload = JSON.parse(raw);
+  } catch {
+    throw new Error("Relivio API returned invalid JSON.");
+  }
+
+  if (!payload || typeof payload !== "object") {
+    throw new Error("Relivio API returned an invalid recent deployments payload.");
+  }
+
+  const record = payload as Record<string, unknown>;
+  const items = Array.isArray(record.items) ? record.items : [];
+
+  return {
+    items: items.map((item) => {
+      if (!item || typeof item !== "object") {
+        throw new Error("Relivio API returned an invalid deployment item.");
+      }
+      const deployment = item as Record<string, unknown>;
+      return {
+        deployment_id: asString(deployment.deployment_id, "deployment_id"),
+        version: asNullableString(deployment.version),
+        deployed_at: asString(deployment.deployed_at, "deployed_at"),
+        window_status: asString(deployment.window_status, "window_status"),
+      };
+    }),
   };
 }
 

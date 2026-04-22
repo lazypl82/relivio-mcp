@@ -8,7 +8,9 @@ Relivio already produces deploy-time verdicts, but agents cannot consume that ve
 
 v0 stays intentionally narrow:
 
-- one tool: `get_verdict`
+- two read-only tools:
+  - `get_verdict`
+  - `list_recent_deployments`
 - thin wrapper over `relivio-server`
 - no write path
 - no new decision logic

@@ -18,6 +18,17 @@ export interface SummaryResponse {
   created_at: string;
 }
 
+export interface RecentDeploymentResponse {
+  deployment_id: string;
+  version: string | null;
+  deployed_at: string;
+  window_status: string;
+}
+
+export interface RecentDeploymentsResponse {
+  items: RecentDeploymentResponse[];
+}
+
 export interface VerdictResult {
   verdict: string;
   decision_tier: DecisionTier;
@@ -48,3 +59,10 @@ export interface ReadyResult {
 }
 
 export type GetVerdictResult = ReadyResult | PendingResult | ErrorResult;
+
+export interface ListRecentDeploymentsReadyResult {
+  status: "ready";
+  deployments: RecentDeploymentResponse[];
+}
+
+export type ListRecentDeploymentsResult = ListRecentDeploymentsReadyResult | ErrorResult;

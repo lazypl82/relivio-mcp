@@ -53,3 +53,29 @@ test("RelivioApiClient throws invalid JSON error on malformed body", async () =>
 
   await assert.rejects(() => client.getLatestSummary(), /invalid JSON/i);
 });
+
+test("RelivioApiClient parses recent deployments payload", async () => {
+  const client = new RelivioApiClient({
+    apiUrl: "https://api.relivio.dev",
+    apiKey: "rk_test",
+    fetchImpl: async () =>
+      new Response(
+        JSON.stringify({
+          items: [
+            {
+              deployment_id: "dep_1",
+              version: "v1.2.3",
+              deployed_at: "2026-04-22T12:00:00Z",
+              window_status: "ACTIVE",
+            },
+          ],
+        }),
+        { status: 200 },
+      ),
+  });
+
+  const response = await client.listRecentDeployments(5);
+
+  assert.equal(response.items[0]?.deployment_id, "dep_1");
+  assert.equal(response.items[0]?.window_status, "ACTIVE");
+});

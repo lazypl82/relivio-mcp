@@ -6,6 +6,7 @@ Minimal MCP server for consuming Relivio post-deploy verdicts from Claude Code, 
 
 - `GET /api/v1/summaries/latest`
 - `GET /api/v1/summaries/latest?deployment_id=...`
+- `GET /api/v1/deployments/recent?limit=...`
 
 It does not:
 
@@ -25,7 +26,9 @@ It only exposes the verdict surface that agents need:
 
 Current status: `v0`
 
-- one tool: `get_verdict`
+- two tools:
+  - `get_verdict`
+  - `list_recent_deployments`
 - read-only only
 - thin wrapper over the existing Relivio API
 - no write tools yet
@@ -33,7 +36,7 @@ Current status: `v0`
 v0 assumptions:
 
 - one API key maps to one project
-- `get_verdict` is the only tool
+- tools stay project-scoped and read-only
 - `retry_after_hint_minutes` is a server-configured observation window hint, currently surfaced as `15`
 
 ## Who this is for
@@ -155,6 +158,34 @@ Input:
 }
 ```
 
+### `list_recent_deployments`
+
+Returns the recent deployments for the current project API key scope.
+
+Input:
+
+```json
+{
+  "limit": 10
+}
+```
+
+Ready response:
+
+```json
+{
+  "status": "ready",
+  "deployments": [
+    {
+      "deployment_id": "dep_123",
+      "version": "v1.2.3",
+      "deployed_at": "2026-04-22T03:20:00Z",
+      "window_status": "ACTIVE"
+    }
+  ]
+}
+```
+
 Ready response:
 
 ```json
@@ -198,8 +229,9 @@ Error response:
 
 v0 intentionally stays narrow:
 
-- one tool: `get_verdict`
-- read-only surface
+- two read-only tools:
+  - `get_verdict`
+  - `list_recent_deployments`
 - structured `ready / pending / error`
 
 Not included in v0:
