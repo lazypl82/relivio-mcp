@@ -17,8 +17,18 @@ test("RelivioApiClient returns parsed summary on 200", async () => {
           recommended_action: "Keep guard ready",
           recommended_action_detail: "Inspect /api/orders/finalize",
           decision_tier: "guard_ready",
+          rationale_summary: "Route concentration is visible after deploy.",
+          operator_steps: [{ kind: "inspect", target: "/api/orders/finalize" }],
+          protection_guidance: {
+            priority: "prepare",
+            target: "/api/orders/finalize",
+          },
           affected_apis: ["/api/orders/finalize"],
           top_signals: ["route concentration"],
+          delivery_status: "ready",
+          delivery_hold_reason: null,
+          external_delivery_ready: true,
+          agent_ready: true,
           created_at: "2026-04-20T12:00:00Z",
         }),
         { status: 200, headers: { "Content-Type": "application/json" } },
@@ -28,6 +38,11 @@ test("RelivioApiClient returns parsed summary on 200", async () => {
   const summary = await client.getLatestSummary("dep_1");
   assert.equal(summary.deployment_id, "dep_1");
   assert.equal(summary.recommended_action, "Keep guard ready");
+  assert.deepEqual(summary.operator_steps, [{ kind: "inspect", target: "/api/orders/finalize" }]);
+  assert.deepEqual(summary.protection_guidance, {
+    priority: "prepare",
+    target: "/api/orders/finalize",
+  });
   assert.deepEqual(summary.affected_apis, ["/api/orders/finalize"]);
 });
 

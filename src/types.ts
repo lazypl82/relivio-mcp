@@ -4,6 +4,15 @@ export type DecisionTier =
   | "guard_ready"
   | "rollback_ready"
   | "block_recommended";
+export type DeliveryStatus = "ready" | "held";
+
+export interface OperatorStep {
+  [key: string]: unknown;
+}
+
+export interface ProtectionGuidance {
+  [key: string]: unknown;
+}
 
 export interface SummaryResponse {
   id: string;
@@ -13,8 +22,15 @@ export interface SummaryResponse {
   recommended_action: string | null;
   recommended_action_detail: string | null;
   decision_tier: DecisionTier | null;
+  rationale_summary: string | null;
+  operator_steps: OperatorStep[];
+  protection_guidance: ProtectionGuidance | null;
   affected_apis: string[];
   top_signals: string[];
+  delivery_status: DeliveryStatus;
+  delivery_hold_reason: string | null;
+  external_delivery_ready: boolean;
+  agent_ready: boolean;
   created_at: string;
 }
 
@@ -34,8 +50,15 @@ export interface VerdictResult {
   decision_tier: DecisionTier;
   recommended_action: string;
   action_detail: string;
+  rationale_summary: string;
+  operator_steps: OperatorStep[];
+  protection_guidance: ProtectionGuidance | null;
   affected_apis: string[];
   top_signals: string[];
+  delivery_status: DeliveryStatus;
+  delivery_hold_reason: string | null;
+  external_delivery_ready: boolean;
+  agent_ready: boolean;
   deployment_id: string;
   created_at: string;
 }

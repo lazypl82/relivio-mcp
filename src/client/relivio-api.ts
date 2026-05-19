@@ -128,6 +128,7 @@ function parseSummaryResponse(raw: string): SummaryResponse {
   const recommendedAction = asNullableString(record.recommended_action);
   const recommendedActionDetail = asNullableString(record.recommended_action_detail);
   const decisionTier = asNullableString(record.decision_tier);
+  const rationaleSummary = asNullableString(record.rationale_summary);
 
   return {
     id: asString(record.id, "id"),
@@ -137,8 +138,15 @@ function parseSummaryResponse(raw: string): SummaryResponse {
     recommended_action: recommendedAction,
     recommended_action_detail: recommendedActionDetail,
     decision_tier: decisionTier as SummaryResponse["decision_tier"],
+    rationale_summary: rationaleSummary,
+    operator_steps: asRecordArray(record.operator_steps),
+    protection_guidance: asNullableRecord(record.protection_guidance),
     affected_apis: asStringArray(record.affected_apis),
     top_signals: asStringArray(record.top_signals),
+    delivery_status: asDeliveryStatus(record.delivery_status),
+    delivery_hold_reason: asNullableString(record.delivery_hold_reason),
+    external_delivery_ready: asBoolean(record.external_delivery_ready, true),
+    agent_ready: asBoolean(record.agent_ready, true),
     created_at: createdAt,
   };
 }
@@ -193,4 +201,29 @@ function asStringArray(value: unknown): string[] {
     return [];
   }
   return value.filter((entry): entry is string => typeof entry === "string");
+}
+
+function asRecordArray(value: unknown): Record<string, unknown>[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value.filter(
+    (entry): entry is Record<string, unknown> =>
+      Boolean(entry) && typeof entry === "object" && !Array.isArray(entry),
+  );
+}
+
+function asNullableRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+  return value as Record<string, unknown>;
+}
+
+function asDeliveryStatus(value: unknown): SummaryResponse["delivery_status"] {
+  return value === "held" ? "held" : "ready";
+}
+
+function asBoolean(value: unknown, fallback: boolean): boolean {
+  return typeof value === "boolean" ? value : fallback;
 }

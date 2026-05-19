@@ -20,8 +20,19 @@ test("get_verdict returns ready payload", async () => {
       recommended_action: "Pause rollout and start rollback review",
       recommended_action_detail: "Inspect /api/orders/finalize first",
       decision_tier: "block_recommended",
+      rationale_summary: "Orders route is saturated after deploy.",
+      operator_steps: [{ kind: "inspect", target: "/api/orders/finalize" }],
+      protection_guidance: {
+        priority: "prepare",
+        target: "/api/orders/finalize",
+        target_scope: "route:/api/orders/finalize",
+      },
       affected_apis: ["/api/orders/finalize"],
       top_signals: ["orders primary saturation"],
+      delivery_status: "ready",
+      delivery_hold_reason: null,
+      external_delivery_ready: true,
+      agent_ready: true,
       created_at: "2026-04-20T12:00:00Z",
     })),
   );
@@ -31,6 +42,15 @@ test("get_verdict returns ready payload", async () => {
   if (result.status === "ready") {
     assert.equal(result.verdict.decision_tier, "block_recommended");
     assert.equal(result.verdict.recommended_action, "Pause rollout and start rollback review");
+    assert.deepEqual(result.verdict.operator_steps, [
+      { kind: "inspect", target: "/api/orders/finalize" },
+    ]);
+    assert.deepEqual(result.verdict.protection_guidance, {
+      priority: "prepare",
+      target: "/api/orders/finalize",
+      target_scope: "route:/api/orders/finalize",
+    });
+    assert.equal(result.verdict.agent_ready, true);
   }
 });
 
